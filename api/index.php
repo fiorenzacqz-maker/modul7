@@ -1,6 +1,5 @@
 <?php
 
-// Pastikan folder sementara di Vercel tersedia sebelum Laravel berjalan
 @mkdir('/tmp/views', 0755, true);
 @mkdir('/tmp/cache', 0755, true);
 
