@@ -1,6 +1,17 @@
 <?php
 
-// Vercel hanya mengizinkan penulisan ke /tmp.
+// DIAGNOSTIK SEMENTARA: hapus setelah masalah ketemu
+error_log('DIAG php=' . PHP_VERSION
+    . ' pdo_pgsql=' . (extension_loaded('pdo_pgsql') ? 'yes' : 'NO')
+    . ' vendor=' . (file_exists(__DIR__ . '/../vendor/autoload.php') ? 'yes' : 'NO')
+    . ' env_APP_KEY=' . (getenv('APP_KEY') ? 'set' : 'EMPTY'));
+register_shutdown_function(function () {
+    $e = error_get_last();
+    if ($e) {
+        error_log('DIAG FATAL: ' . $e['message'] . ' @ ' . $e['file'] . ':' . $e['line']);
+    }
+});
+
 $tmp = [
     'APP_CONFIG_CACHE'   => '/tmp/config.php',
     'APP_EVENTS_CACHE'   => '/tmp/events.php',
