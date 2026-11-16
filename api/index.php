@@ -1,32 +1,45 @@
 <?php
 
-// DIAGNOSTIK SEMENTARA: hapus setelah masalah ketemu
-error_log('DIAG php=' . PHP_VERSION
-    . ' pdo_pgsql=' . (extension_loaded('pdo_pgsql') ? 'yes' : 'NO')
-    . ' vendor=' . (file_exists(__DIR__ . '/../vendor/autoload.php') ? 'yes' : 'NO')
-    . ' env_APP_KEY=' . (getenv('APP_KEY') ? 'set' : 'EMPTY'));
-register_shutdown_function(function () {
-    $e = error_get_last();
-    if ($e) {
-        error_log('DIAG FATAL: ' . $e['message'] . ' @ ' . $e['file'] . ':' . $e['line']);
-    }
-});
+/*
+ * Pintu masuk aplikasi di Vercel (serverless).
+ * Di Vercel hanya /tmp yang bisa ditulis, jadi seluruh jalur tulis Laravel
+ * (storage, cache bootstrap) diarahkan ke sana sebelum aplikasi dimuat.
+ */
 
-$tmp = [
-    'APP_CONFIG_CACHE'   => '/tmp/config.php',
-    'APP_EVENTS_CACHE'   => '/tmp/events.php',
-    'APP_PACKAGES_CACHE' => '/tmp/packages.php',
-    'APP_ROUTES_CACHE'   => '/tmp/routes.php',
-    'APP_SERVICES_CACHE' => '/tmp/services.php',
-    'VIEW_COMPILED_PATH' => '/tmp/views',
-    'LOG_CHANNEL'        => 'stderr',
-    'CACHE_STORE'        => 'array',
+$dirs = [
+    '/tmp/storage/app',
+    '/tmp/storage/framework/cache',
+    '/tmp/storage/framework/sessions',
+    '/tmp/storage/framework/views',
+    '/tmp/storage/logs',
+    '/tmp/bootstrap/cache',
 ];
-foreach ($tmp as $key => $value) {
+
+foreach ($dirs as $dir) {
+    if (! is_dir($dir)) {
+        mkdir($dir, 0755, true);
+    }
+}
+
+$env = [
+    'LARAVEL_STORAGE_PATH' => '/tmp/storage',
+    'APP_SERVICES_CACHE'   => '/tmp/bootstrap/cache/services.php',
+    'APP_PACKAGES_CACHE'   => '/tmp/bootstrap/cache/packages.php',
+    'APP_CONFIG_CACHE'     => '/tmp/bootstrap/cache/config.php',
+    'APP_ROUTES_CACHE'     => '/tmp/bootstrap/cache/routes.php',
+    'APP_EVENTS_CACHE'     => '/tmp/bootstrap/cache/events.php',
+];
+
+foreach ($env as $key => $value) {
     putenv("$key=$value");
     $_ENV[$key] = $value;
     $_SERVER[$key] = $value;
 }
-@mkdir('/tmp/views', 0755, true);
+
+// Log ke stderr agar muncul di tab Logs Vercel (bila belum diatur).
+if (getenv('LOG_CHANNEL') === false) {
+    putenv('LOG_CHANNEL=stderr');
+    $_ENV['LOG_CHANNEL'] = 'stderr';
+}
 
 require __DIR__ . '/../public/index.php';
