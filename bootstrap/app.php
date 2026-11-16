@@ -13,13 +13,12 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Vercel berada di belakang proxy HTTPS: percayai header X-Forwarded-*.
+        $middleware->trustProxies(at: '*');
+
         // Middleware "auth": tamu yang membuka halaman terlindungi diarahkan ke login.
         // Middleware "guest": pengguna yang sudah login diarahkan ke dashboard
         // saat membuka halaman login/registrasi.
-        // Vercel menerminasi HTTPS di depan aplikasi; tanpa ini asset() menghasilkan
-        // URL http:// sehingga CSS diblokir browser (mixed content).
-        $middleware->trustProxies(at: '*');
-
         $middleware->redirectGuestsTo(fn (Request $request) => route('login'));
         $middleware->redirectUsersTo(fn (Request $request) => route('dashboard'));
 
