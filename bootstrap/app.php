@@ -34,4 +34,10 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
         );
+
+        // DIAGNOSTIK SEMENTARA: hapus setelah masalah ketemu
+        $exceptions->report(function (\Throwable $e) {
+            error_log('DIAG ' . get_class($e) . ': ' . $e->getMessage()
+                . ' @ ' . $e->getFile() . ':' . $e->getLine());
+        });
     })->create();
