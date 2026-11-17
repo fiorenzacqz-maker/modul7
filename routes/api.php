@@ -29,3 +29,24 @@ Route::middleware(['web', 'auth'])->group(function () {
         Route::get('rekap/peminjaman-per-buku', [RekapController::class, 'peminjamanPerBuku']);
     });
 });
+
+// DIAGNOSTIK SEMENTARA: hapus setelah masalah ketemu
+Route::get('/diag', function () {
+    $out = [];
+    $cek = [
+        'koneksi_db'     => fn () => \Illuminate\Support\Facades\DB::select('select 1 as ok'),
+        'tabel_users'    => fn () => \Illuminate\Support\Facades\Schema::hasTable('users'),
+        'jumlah_users'   => fn () => \Illuminate\Support\Facades\DB::table('users')->count(),
+        'tabel_sessions' => fn () => \Illuminate\Support\Facades\Schema::hasTable('sessions'),
+        'tabel_roles'    => fn () => \Illuminate\Support\Facades\Schema::hasTable('roles'),
+        'tabel_cache'    => fn () => \Illuminate\Support\Facades\Schema::hasTable('cache'),
+    ];
+    foreach ($cek as $nama => $fn) {
+        try {
+            $out[$nama] = $fn();
+        } catch (\Throwable $e) {
+            $out[$nama] = get_class($e) . ': ' . \Illuminate\Support\Str::limit($e->getMessage(), 200);
+        }
+    }
+    return response()->json($out);
+});
